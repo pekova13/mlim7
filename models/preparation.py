@@ -6,9 +6,6 @@ import numpy as np
 import pandas as pd
 from tqdm import tqdm
 
-NR_WEEKS = 90
-NR_PRODUCTS = 250
-
 
 class BasketLookup:
     """
@@ -41,6 +38,8 @@ class HistoryMaker:
     """
     Make history
     """
+    NR_PRODUCTS: int
+    NR_WEEKS: int
     baskets: BasketLookup
     coupon_products: BasketLookup
     coupon_discounts: BasketLookup
@@ -58,6 +57,9 @@ class HistoryMaker:
         """
         Prepare lookups based on baskets and coupons dataframes.
         """
+        self.NR_PRODUCTS = len(set(baskets_df['product']))
+        self.NR_WEEKS = len(set(baskets_df['week']))
+
         self.baskets = BasketLookup(baskets_df, TARGET='product')
         self.coupon_products = BasketLookup(coupons_df, TARGET='product')
         self.coupon_discounts = BasketLookup(coupons_df, TARGET='discount')
@@ -70,20 +72,20 @@ class HistoryMaker:
         Returns a matrix of purchases history for a shopper,
         where rows=products and columns=weeks
         """
-        shopper_history = np.zeros((NR_PRODUCTS, NR_WEEKS), dtype=int)
+        shopper_history = np.zeros((self.NR_PRODUCTS, self.NR_WEEKS), dtype=int)
 
-        for week in range(NR_WEEKS):
+        for week in range(self.NR_WEEKS):
             prods = self.baskets.lookup(shopper=shopper, week=week)
             for prod in prods:
                 shopper_history[prod, week] += 1
 
         return shopper_history
     
-    def get_coupon_info(self, shopper: int, week: int) -> np.ndarray:
+    def get_coupon_amounts(self, shopper: int, week: int) -> np.ndarray:
         """
         Returns an array of coupon amounts given to a shopper in a certain week.
         """
-        coupons = np.zeros((NR_PRODUCTS), dtype=int)
+        coupons = np.zeros((self.NR_PRODUCTS), dtype=int)
         zipper = zip(
             self.coupon_products.lookup(shopper=shopper, week=week),
             self.coupon_discounts.lookup(shopper=shopper, week=week)
@@ -97,7 +99,7 @@ class HistoryMaker:
         """
         Returns an array of products purchased by a shopper in a certain week.
         """
-        purchased = np.zeros((NR_PRODUCTS), dtype=int)
+        purchased = np.zeros((self.NR_PRODUCTS), dtype=int)
         
         for prod in self.baskets.lookup(shopper=shopper, week=week):
             purchased[prod] += 1
@@ -108,13 +110,16 @@ class HistoryMaker:
         """
         Returns an array of product prices
         """
-        return np.ndarray(list(self.prices))
+        return np.array(list(self.prices.values()))
 
     def save(self, path: str = 'history.pkl') -> None:
         """
         Save fitted history to pickle.
         """
-        contents = (self.baskets, self.coupon_products, self.coupon_discounts, self.prices)
+        contents = (
+            self.NR_PRODUCTS, self.NR_WEEKS, 
+            self.baskets, self.coupon_products, self.coupon_discounts, self.prices
+        )
         with open(path, "wb") as f:
             pickle.dump(contents, f) 
 
@@ -124,7 +129,10 @@ class HistoryMaker:
         """
         with open(path, "rb") as f:
             contents = pickle.load(f)
-        (self.baskets, self.coupon_products, self.coupon_discounts, self.prices) = contents
+        (
+            self.NR_PRODUCTS, self.NR_WEEKS, 
+            self.baskets, self.coupon_products, self.coupon_discounts, self.prices
+        ) = contents
 
 
 if __name__ == '__main__':
