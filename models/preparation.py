@@ -41,9 +41,9 @@ class HistoryMaker:
     """
     Make history
     """
-    NR_SHOPPERS: int
-    NR_PRODUCTS: int
-    NR_WEEKS: int
+    NR_SHOPPERS: int = 0
+    NR_PRODUCTS: int = 0
+    NR_WEEKS: int = 0
     baskets: BasketLookup
     coupon_products: BasketLookup
     coupon_discounts: BasketLookup
@@ -139,6 +139,11 @@ class HistoryMaker:
         assert shopper < self.NR_SHOPPERS
         assert week < self.NR_WEEKS
 
+    def __repr__(self) -> str:
+        return (
+            f'<{self.__class__.__name__} with {self.NR_SHOPPERS} shoppers, '
+            f'{self.NR_PRODUCTS} products, {self.NR_WEEKS} weeks>'
+        )
         
 
 
