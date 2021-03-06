@@ -7,6 +7,9 @@ misc/
 *temp*
 .vscode
 .DS_store
+*.txt
+*.csv
+OLD/
 
 # C extensions
 *.so
