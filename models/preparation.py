@@ -41,6 +41,7 @@ class HistoryMaker:
     """
     Make history
     """
+    NR_SHOPPERS: int
     NR_PRODUCTS: int
     NR_WEEKS: int
     baskets: BasketLookup
@@ -56,6 +57,7 @@ class HistoryMaker:
         """
         Prepare lookups based on baskets and coupons dataframes.
         """
+        self.NR_SHOPPERS = len(set(baskets_df['shopper']))
         self.NR_PRODUCTS = len(set(baskets_df['product']))
         self.NR_WEEKS = len(set(baskets_df['week']))
 
@@ -71,6 +73,8 @@ class HistoryMaker:
         Returns a matrix of purchases history for a shopper,
         where rows=products and columns=weeks
         """
+        self._assert_input(shopper=shopper, week=0)
+
         shopper_history = np.zeros((self.NR_PRODUCTS, self.NR_WEEKS), dtype=int)
 
         for week in range(self.NR_WEEKS):
@@ -84,6 +88,8 @@ class HistoryMaker:
         """
         Returns an array of coupon amounts given to a shopper in a certain week.
         """
+        self._assert_input(shopper=shopper, week=week)
+
         coupons = np.zeros((self.NR_PRODUCTS), dtype=int)
         zipper = zip(
             self.coupon_products.lookup(shopper=shopper, week=week),
@@ -98,6 +104,8 @@ class HistoryMaker:
         """
         Returns an array of products purchased by a shopper in a certain week.
         """
+        self._assert_input(shopper=shopper, week=week)
+
         purchased = np.zeros((self.NR_PRODUCTS), dtype=int)
         
         for prod in self.baskets.lookup(shopper=shopper, week=week):
@@ -126,6 +134,11 @@ class HistoryMaker:
         with open(path, "rb") as f:
             history_instance = pickle.load(f)
         return history_instance
+
+    def _assert_input(self, shopper: int, week: int) -> None:
+        assert shopper < self.NR_SHOPPERS
+        assert week < self.NR_WEEKS
+
         
 
 
