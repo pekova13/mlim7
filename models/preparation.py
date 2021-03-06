@@ -1,10 +1,13 @@
 
 import pickle
-from typing import Dict, List, Optional
+from typing import Dict, List
 
 import numpy as np
 import pandas as pd
 from tqdm import tqdm
+
+
+# TODO: HistoryMaker.load() fails if BasketLookup not loaded in namespace
 
 
 class BasketLookup:
@@ -44,10 +47,6 @@ class HistoryMaker:
     coupon_products: BasketLookup
     coupon_discounts: BasketLookup
     prices: Dict[int, int]
-
-    def __init__(self, load_from_path: Optional[str] = None) -> None:
-        if load_from_path:
-            self.load(path=load_from_path)
         
     def fit(self, 
             baskets_df: pd.DataFrame, 
@@ -116,23 +115,18 @@ class HistoryMaker:
         """
         Save fitted history to pickle.
         """
-        contents = (
-            self.NR_PRODUCTS, self.NR_WEEKS, 
-            self.baskets, self.coupon_products, self.coupon_discounts, self.prices
-        )
         with open(path, "wb") as f:
-            pickle.dump(contents, f) 
+            pickle.dump(self, f) 
 
-    def load(self, path: str = 'history.pkl') -> None:
+    @classmethod
+    def load(cls, path: str = 'history.pkl') -> None:
         """
-        Load previously fitted history from pickle.
+        Load previously fitted history instance from a pickle file.
         """
         with open(path, "rb") as f:
-            contents = pickle.load(f)
-        (
-            self.NR_PRODUCTS, self.NR_WEEKS, 
-            self.baskets, self.coupon_products, self.coupon_discounts, self.prices
-        ) = contents
+            history_instance = pickle.load(f)
+        return history_instance
+        
 
 
 if __name__ == '__main__':
@@ -143,6 +137,3 @@ if __name__ == '__main__':
     history = HistoryMaker()
     history.fit(baskets_df=baskets_df, coupons_df=coupons_df)
     history.save(path='history.pkl')
-
-
-
