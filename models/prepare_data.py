@@ -262,10 +262,10 @@ if __name__ == '__main__':
     )
 
     # test integrity
-    #history0, frequencies0, _, purchases1 = next(data_constructor)
-    #history1, *_ = next(data_constructor)
+    history0, frequencies0, _, purchases1 = next(data_streamer)
+    history1, *_ = next(data_streamer)
 
-    #assert sum(sum(history0)) > 0 # type: ignore
-    #assert all(history0[:,0] == frequencies0)
-    #assert all(history1[:,0] == purchases1)
-    #data_constructor.reset()
+    assert sum(sum(history0)) > 0 # type: ignore
+    assert all(history0[:,0] == frequencies0)
+    assert all(history1[:,0] == purchases1)
+    data_streamer.reset()
