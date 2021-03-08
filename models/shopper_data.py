@@ -207,5 +207,5 @@ if __name__ == '__main__':
     ShopperDataWriter().fit(df=coupons_df, target='product').write('coupon_products.csv')
     ShopperDataWriter().fit(df=coupons_df, target='discount').write('coupon_values.csv')
 
-    prices: pd.DataFrame = baskets_df.groupby('product')['price'].agg('median').to_dict()
-    prices.to_csv('prices.csv', index=False) # TODO fix this
+    prices = baskets_df.groupby('product')['price'].agg('median')
+    prices.to_csv('prices.csv', index=False)
