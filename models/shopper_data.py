@@ -1,6 +1,7 @@
 
 from __future__ import annotations
 
+import argparse
 import csv
 from typing import Dict, List, Optional
 
@@ -187,8 +188,20 @@ class ShopperDataStreamer:
 
 if __name__ == '__main__':
 
-    baskets_df = pd.read_parquet('data/baskets.parquet')[0:1_000_000]
-    coupons_df = pd.read_parquet('data/coupons.parquet')[0:1_000_000]
+    parser = argparse.ArgumentParser()
+    parser.add_argument('limit', type=int, default=0, nargs='?')
+    kwargs = parser.parse_args()
+
+    baskets_df = pd.read_parquet('data/baskets.parquet')
+    coupons_df = pd.read_parquet('data/coupons.parquet')
+
+    if kwargs.limit > 0:
+        print(f'sample limited to {kwargs.limit} shoppers')
+        baskets_df = baskets_df[baskets_df['shopper'] < kwargs.limit]
+        coupons_df = coupons_df[coupons_df['shopper'] < kwargs.limit]
+
+        assert isinstance(baskets_df, pd.DataFrame) # for pylance
+        assert isinstance(coupons_df, pd.DataFrame)
 
     ShopperDataWriter().fit(df=baskets_df, target='product').write('baskets.csv')
     ShopperDataWriter().fit(df=coupons_df, target='product').write('coupon_products.csv')
