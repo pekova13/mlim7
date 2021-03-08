@@ -27,19 +27,19 @@ def set_limit(v1: int, v2: Optional[int]) -> int:
         return v1
 
 
-class DataConstructor:
+class DataStreamer:
     """
     Usage:
-    >>> data_constructor = DataConstructor(
+    >>> data_streamer = DataStreamer(
             baskets_streamer, coupon_products_streamer, coupon_values_streamer, 
             time_window
         )
     
-    >>> for history, frequencies, coupons, purchases in data_constructor:
+    >>> for history, frequencies, coupons, purchases in data_streamer:
             model.train(history, frequencies, coupons, purchases)
     
-    >>> data_constructor.reset() # reset iterators if needed
-    >>> data_constructor.close() # close connections once done
+    >>> data_streamer.reset() # reset iterators if needed
+    >>> data_streamer.close() # close connections once done
     """
     _shopper_baskets: ShopperData
     _shopper_coupon_products: ShopperData
@@ -90,7 +90,7 @@ class DataConstructor:
         self.coupon_products_streamer.close()
         self.coupon_values_streamer.close()
 
-    def __iter__(self) -> DataConstructor:
+    def __iter__(self) -> DataStreamer:
         return self
     
     def __next__(self) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
@@ -169,7 +169,7 @@ class DataConstructor:
         Returns a {0,1}-matrix of purchases by a shopper in the given week.
         """
         return self._calc_history(
-            week_from=week - self.time_window,
+            week_from=week - self.time_window + 1,
             week_to=week
         )
 
@@ -203,28 +203,28 @@ class DataConstructor:
         return shopper_history
 
 
-class BatchConstructor:
+class BatchStreamer:
     """
-    A wrapper around `DataConstructor` to obtain mini-batches instead of single observations.
+    A wrapper around `DataStreamer` to obtain mini-batches instead of single observations.
 
     Usage:
-    >>> batch_constructor = BatchConstructor(data_constructor, batch_size)
-    >>> for _ in batch_constructor:
+    >>> batch_streamer = BatchStreamer(data_streamer, batch_size)
+    >>> for _ in batch_streamer:
             pass
     """
 
-    def __init__(self, data_constructor: DataConstructor, batch_size: int):
-        self.data_constructor = data_constructor
+    def __init__(self, data_streamer: DataStreamer, batch_size: int):
+        self.data_streamer = data_streamer
         self.batch_size = batch_size
 
-    def __iter__(self) -> BatchConstructor:
+    def __iter__(self) -> BatchStreamer:
         return self
     
     def __next__(self) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
         """
         """
-        nr_products = self.data_constructor.NR_PRODUCTS
-        time_window = self.data_constructor.time_window
+        nr_products = self.data_streamer.NR_PRODUCTS
+        time_window = self.data_streamer.time_window
 
         history = np.zeros((self.batch_size, nr_products, time_window))
         frequencies = np.zeros((self.batch_size, nr_products))
@@ -233,7 +233,7 @@ class BatchConstructor:
 
         for i in range(self.batch_size):
             try:
-                h, f, c, p = next(self.data_constructor)
+                h, f, c, p = next(self.data_streamer)
                 history[i,:,:] = h
                 frequencies[i,:] = f
                 coupons[i,:] = c
@@ -250,14 +250,14 @@ if __name__ == '__main__':
     coupon_products_streamer = ShopperDataStreamer('coupon_products.csv')
     coupon_values_streamer = ShopperDataStreamer('coupon_values.csv')
 
-    data_constructor = DataConstructor(
+    data_streamer = DataStreamer(
         baskets_streamer=baskets_streamer,
         coupon_products_streamer=coupon_products_streamer,
         coupon_values_streamer=coupon_values_streamer,
         time_window=10
     )
-    batch_constuctor = BatchConstructor(
-        data_constructor=data_constructor,
+    batch_streamer = BatchStreamer(
+        data_streamer=data_streamer,
         batch_size=10
     )
 
