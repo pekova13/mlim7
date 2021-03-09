@@ -82,7 +82,7 @@ class DataStreamer:
         Returns:
         - purchase history matrix (dimension: products, weeks)
         - purchase frequency vector up until week `t` (dim: products)
-        - coupon values vector in week `t` (dim: products)
+        - coupon values vector in week `t+1` (dim: products)
         - purchases in week `t+1` (dim: products)
         """
         if not self._active:
@@ -91,7 +91,7 @@ class DataStreamer:
 
         history = self._get_history(week=self._current_week)
         frequencies = self._get_frequencies(week=self._current_week)
-        coupons = self._get_coupons(week=self._current_week)
+        coupons = self._get_coupons(week=self._current_week+1)
         purchases = self._get_true_purchases(week=self._current_week+1)
 
         if self._current_week == (self.last_week - 1):
