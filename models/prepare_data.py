@@ -113,6 +113,9 @@ class DataStreamer:
         self.shopper_coupon_products = next(self.coupon_products_streamer)
         self.shopper_coupon_values = next(self.coupon_values_streamer)
 
+        if self.shopper_baskets.shopper > self.last_shopper:
+            raise StopIteration(f'Exceeded limit of {self.last_shopper} shoppers.')
+
         if not (self.shopper_baskets.shopper 
             == self.shopper_coupon_products.shopper 
             == self.shopper_coupon_values.shopper
