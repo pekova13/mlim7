@@ -11,10 +11,18 @@ sys.path.append('.')
 from models.shopper_data import ShopperDataStreamer, ShopperData
 
 
-
-
 class DataStreamer:
-    """
+    """ Data streamer
+
+    Kwargs:
+        baskets_streamer, coupon_products_streamer, coupon_values_streamer: input `ShopperDataStreamer`s
+        time_window_recent_history:     time window (col dimension) for the recent purchase history matrix
+        time_window_extended_history:   time window for each column of the extended purchase history matrix
+        dimension_extended_history:     column dimension for the extended purchase history matrix
+        first_week:                     first week to be predicted
+        last_week:                      last week to be predicted
+        last_shopper:                   last shopper to be included
+
     Usage:
     >>> data_streamer = DataStreamer(
             baskets_streamer, coupon_products_streamer, coupon_values_streamer, 
@@ -50,7 +58,7 @@ class DataStreamer:
         time_window_recent_history: int = 5,
         time_window_extended_history: int = 25,
         dimension_extended_history: int = 5,
-        #first_week: int = 0,
+        first_week: Optional[int] = None,
         last_week: Optional[int] = None,
         last_shopper: Optional[int] = None,
         ) -> None:
@@ -59,15 +67,30 @@ class DataStreamer:
         self.coupon_products_streamer = coupon_products_streamer
         self.coupon_values_streamer = coupon_values_streamer
 
+        self.NR_PRODUCTS = self.baskets_streamer.max_value + 1
         self.TW_RECENT = time_window_recent_history
         self.TW_EXTENDED = time_window_extended_history
         self.DIM_EXTENDED = dimension_extended_history
+        
+        weeks_to_burn = self.TW_RECENT + self.TW_EXTENDED * self.DIM_EXTENDED
+        self.first_week = weeks_to_burn - 1
+        self.last_week = self.baskets_streamer.max_week
+        self.last_shopper = self.baskets_streamer.max_shopper
+        
+        if first_week:
+            assert first_week > weeks_to_burn
+            assert first_week < self.last_week
+            self.first_week = first_week
 
-        self.first_week = self.TW_RECENT + self.TW_EXTENDED*self.DIM_EXTENDED - 1
-        self.last_week = set_limit(self.baskets_streamer.max_week, last_week)
-        self.last_shopper = set_limit(self.baskets_streamer.max_shopper, last_shopper)
+        if last_week:
+            assert last_week > 0
+            assert last_week < self.last_week
+            self.last_week = last_week
 
-        self.NR_PRODUCTS = self.baskets_streamer.max_value + 1
+        if last_shopper:
+            assert last_shopper > 0
+            assert last_shopper < self.last_shopper
+            self.last_shopper = last_shopper
 
         self.prediction_mode = False
         self.__reset_iterator_positions()
@@ -126,6 +149,8 @@ class DataStreamer:
         # TODO improve this text
 
         """
+        #print(self) # uncode for debugging
+
         if not self._active:
             self._query_next_shopper()
             self._active = True
@@ -251,7 +276,7 @@ class DataStreamer:
     def __repr__(self) -> str:
         return (
             f'{self.__class__.__name__} at shopper={self._current_shopper}/{self.last_shopper+1} '
-            f'and week={self._current_week}/{self.last_week+1}')
+            f'and week={self._current_week}/{self.last_week+1} ({self._current_week} to be predicted)')
 
 
 class BatchStreamer:
@@ -293,6 +318,11 @@ class BatchStreamer:
         
         return recent_history, extended_history, coupons, purchases
 
+    def reset(self) -> None:
+        """
+        """
+        self.data_streamer.reset()
+
 
 if __name__ == '__main__':
 
@@ -300,18 +330,31 @@ if __name__ == '__main__':
     coupon_products_streamer = ShopperDataStreamer('coupon_products.csv')
     coupon_values_streamer = ShopperDataStreamer('coupon_values.csv')
 
-    data_streamer = DataStreamer(
-        baskets_streamer=baskets_streamer,
-        coupon_products_streamer=coupon_products_streamer,
-        coupon_values_streamer=coupon_values_streamer,
-        time_window_recent_history=5,
-        time_window_extended_history=5,
-        dimension_extended_history=5
-    )
-    batch_streamer = BatchStreamer(
-        data_streamer=data_streamer,
-        batch_size=10
-    )
+    BATCH_SIZE = 10
+    TRAIN_LAST_WEEK = 79
+
+    # weeks 0-29 are used only as history
+    # train: predict weeks 30 to 79
+    # test:  predict weeks 80 to 89
+    # assignment: predict week 90
+
+    data = {
+        'baskets_streamer': baskets_streamer,
+        'coupon_products_streamer': coupon_products_streamer,
+        'coupon_values_streamer': coupon_values_streamer
+    }
+    config = {
+        'time_window_recent_history': 5,
+        'time_window_extended_history': 5,
+        'dimension_extended_history': 5,
+        'last_shopper': 1999
+    }
+
+    data_streamer_train = DataStreamer(**data, **config, last_week=TRAIN_LAST_WEEK)
+    data_streamer_test = DataStreamer(**data, **config, first_week=TRAIN_LAST_WEEK+1)
+
+    batch_streamer_train = BatchStreamer(data_streamer_test, batch_size=BATCH_SIZE)
+    batch_streamer_test = BatchStreamer(data_streamer_test, batch_size=BATCH_SIZE)
 
     # to make predictions:
     # data_streamer.enter_prediction_mode()
