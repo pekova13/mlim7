@@ -22,6 +22,7 @@ class DataStreamer:
         first_week:                     first week to be predicted
         last_week:                      last week to be predicted
         last_shopper:                   last shopper to be included
+        after_last_week:                set to True when making final predictions
 
     Usage:
     >>> data_streamer = DataStreamer(
@@ -34,14 +35,6 @@ class DataStreamer:
     
     >>> data_streamer.reset() # reset iterators if needed
     >>> data_streamer.close() # close connections once done
-
-    To make predictions:
-    >>> data_streamer.enter_prediction_mode(week=90)
-    >>> data_streamer.last_shopper = 2000   
-
-    >>> for history, frequencies, coupons, _ in data_streamer:
-            coupons[:, :-1] = fill_coupons()
-            model.predict(history, frequencies, coupons)
 
     """
     shopper_baskets: ShopperData
@@ -61,6 +54,7 @@ class DataStreamer:
         first_week: Optional[int] = None,
         last_week: Optional[int] = None,
         last_shopper: Optional[int] = None,
+        after_last_week: bool = False
         ) -> None:
         
         self.baskets_streamer = baskets_streamer
@@ -92,7 +86,13 @@ class DataStreamer:
             assert last_shopper < self.last_shopper
             self.last_shopper = last_shopper
 
-        self.prediction_mode = False
+        # for final predictions
+        if after_last_week:
+            self.prediction_mode = True
+            self.first_week = self.last_week
+        else:
+            self.prediction_mode = False
+
         self.__reset_iterator_positions()
 
     def reset(self) -> None:
@@ -116,15 +116,6 @@ class DataStreamer:
         self.baskets_streamer.close()
         self.coupon_products_streamer.close()
         self.coupon_values_streamer.close()
-
-    def enter_prediction_mode(self, week: int = 90) -> None:
-        """
-        Change the iterator mode to prediciton for a selected week.
-        """
-        self.prediction_mode = True
-        self.first_week = week - 1 
-        self.last_week = week - 1
-        self.reset()
 
     def __iter__(self) -> DataStreamer:
         return self
@@ -276,7 +267,7 @@ class DataStreamer:
     def __repr__(self) -> str:
         return (
             f'{self.__class__.__name__} at shopper={self._current_shopper}/{self.last_shopper+1} '
-            f'and week={self._current_week}/{self.last_week+1} ({self._current_week} to be predicted)')
+            f'and week={self._current_week}/{self.last_week+1} ({self._current_week+1} to be predicted)')
 
 
 class BatchStreamer:
@@ -352,9 +343,15 @@ if __name__ == '__main__':
 
     data_streamer_train = DataStreamer(**data, **config, last_week=TRAIN_LAST_WEEK)
     data_streamer_test = DataStreamer(**data, **config, first_week=TRAIN_LAST_WEEK+1)
+    data_streamer_final = DataStreamer(**data, **config, after_last_week=True)
 
-    batch_streamer_train = BatchStreamer(data_streamer_test, batch_size=BATCH_SIZE)
+    batch_streamer_train = BatchStreamer(data_streamer_train, batch_size=BATCH_SIZE)
     batch_streamer_test = BatchStreamer(data_streamer_test, batch_size=BATCH_SIZE)
+    batch_streamer_final = BatchStreamer(data_streamer_final, batch_size=1)
+
+
+    # TRAIN LOOP EXAMPLE
+    raise NotImplementedError('code below should not be executed as is')
 
     # to make predictions:
     # data_streamer.enter_prediction_mode()
