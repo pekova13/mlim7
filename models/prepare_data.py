@@ -40,6 +40,15 @@ class DataStreamer:
     
     >>> data_streamer.reset() # reset iterators if needed
     >>> data_streamer.close() # close connections once done
+
+    To make predictions:
+    >>> data_streamer.enter_prediction_mode(week=90)
+    >>> data_streamer.last_shopper = 2000   
+
+    >>> for history, frequencies, coupons, _ in data_streamer:
+            coupons[:, :-1] = fill_coupons()
+            model.predict(history, frequencies, coupons)
+
     """
     shopper_baskets: ShopperData
     shopper_coupon_products: ShopperData
@@ -74,6 +83,7 @@ class DataStreamer:
 
         self.NR_PRODUCTS = self.baskets_streamer.max_value + 1
 
+        self.prediction_mode = False
         self.__reset_iterator_positions()
 
     def reset(self) -> None:
@@ -98,6 +108,15 @@ class DataStreamer:
         self.coupon_products_streamer.close()
         self.coupon_values_streamer.close()
 
+    def enter_prediction_mode(self, week: int = 90) -> None:
+        """
+        Change the iterator mode to prediciton for a selected week.
+        """
+        self.prediction_mode = True
+        self.first_week = week - 1 
+        self.last_week = week - 1
+        self.reset()
+
     def __iter__(self) -> DataStreamer:
         return self
     
@@ -119,7 +138,6 @@ class DataStreamer:
         - purchases in week `90`
 
         # TODO improve this text
-        # TODO actually add frequency_par parameter
 
         """
         if not self._active:
@@ -148,7 +166,7 @@ class DataStreamer:
         assert coupons.shape == (self.NR_PRODUCTS, self.TW_RECENT+1)
         assert purchases.shape == (self.NR_PRODUCTS, )
         
-        if self._current_week == (self.last_week - 1):
+        if self._current_week >= (self.last_week - 1):
             # if we reached the last week for the current shopper, load next shopper
             self._current_week = self.first_week
             self._query_next_shopper()
@@ -202,7 +220,10 @@ class DataStreamer:
         """
         Returns a {0,1}-array with products purchased by the in-memory shopper in a given `week`.
         """
-        return self.shopper_purchase_history[:, week]
+        if self.prediction_mode:
+            return np.zeros((self.NR_PRODUCTS, ))
+        else:
+            return self.shopper_purchase_history[:, week]
 
     def _get_recent_history(self, week_from: int, week_to: int) -> np.ndarray:
         """
@@ -234,7 +255,12 @@ class DataStreamer:
         Returns a [0,1]-matrix with coupons given to the in-memory shopper in weeks (incl.)
         `week_from` -- `week_to`
         """
-        return self.shopper_coupon_history[:, week_from:week_to+1]
+        if self.prediction_mode:
+            coupons = np.zeros((self.NR_PRODUCTS, self.TW_RECENT+1))
+            coupons[:, :self.TW_RECENT] = self.shopper_coupon_history[:, week_from:week_to]
+        else:
+            coupons = self.shopper_coupon_history[:, week_from:week_to+1]
+        return coupons
 
     def __repr__(self) -> str:
         return (
@@ -300,6 +326,10 @@ if __name__ == '__main__':
         data_streamer=data_streamer,
         batch_size=10
     )
+
+    # to make predictions:
+    # data_streamer.enter_prediction_mode()
+    # data_streamer.last_shopper = 2000
 
     # test integrity
     #history0, frequencies0, _, purchases1 = next(data_streamer)
