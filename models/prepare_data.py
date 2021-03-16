@@ -353,15 +353,31 @@ if __name__ == '__main__':
     # TRAIN LOOP EXAMPLE
     raise NotImplementedError('code below should not be executed as is')
 
-    # to make predictions:
-    # data_streamer.enter_prediction_mode()
-    # data_streamer.last_shopper = 2000
+    class Model:
+        def train(self, *args): pass
+        def predict(self, *args): pass
+        def evaluate(self, *args): pass
 
-    # test integrity
-    #history0, frequencies0, _, purchases1 = next(data_streamer)
-    #history1, *_ = next(data_streamer)
+    model = Model()
 
-    #assert sum(sum(history0)) > 0 # type: ignore
-    #assert all(history0[:,0] == frequencies0)
-    #assert all(history1[:,0] == purchases1)
-    #data_streamer.reset()
+    def generate_coupons(): pass
+    def evaluate_uplift(_): pass
+
+    # training
+    batch_streamer_train.reset()
+    for H, F, C, P in batch_streamer_train:
+        model.train(H, F, C, P)
+    
+    # testing
+    batch_streamer_test.reset()
+    for H, F, C, P in batch_streamer_train:
+        pred = model.predict(H, F, C)
+        model.evaluate(pred, P)
+
+    # final preds for assignment
+
+    batch_streamer_final.reset()
+    for H, F, C, _ in batch_streamer_final:
+        C[:, -1] = generate_coupons()
+        pred = model.predict(H, F, C)
+        evaluate_uplift(pred)
