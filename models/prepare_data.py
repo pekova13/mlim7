@@ -68,7 +68,7 @@ class DataStreamer:
         self.TW_EXTENDED = time_window_extended_history
         self.DIM_EXTENDED = dimension_extended_history
 
-        self.first_week = self.TW_RECENT + self.TW_EXTENDED*self.DIM_EXTENDED
+        self.first_week = self.TW_RECENT + self.TW_EXTENDED*self.DIM_EXTENDED - 1
         self.last_week = set_limit(self.baskets_streamer.max_week, last_week)
         self.last_shopper = set_limit(self.baskets_streamer.max_shopper, last_shopper)
 
@@ -142,6 +142,11 @@ class DataStreamer:
         purchases = self._get_true_purchases(
             week = self._current_week + 1
         )
+
+        assert history.shape == (self.NR_PRODUCTS, self.TW_RECENT)
+        assert frequencies.shape == (self.NR_PRODUCTS, self.DIM_EXTENDED)
+        assert coupons.shape == (self.NR_PRODUCTS, self.TW_RECENT+1)
+        assert purchases.shape == (self.NR_PRODUCTS, )
         
         if self._current_week == (self.last_week - 1):
             # if we reached the last week for the current shopper, load next shopper
@@ -177,10 +182,10 @@ class DataStreamer:
 
         # construct shopper purchase and coupon history
 
-        self.shopper_purchase_history = np.zeros((self.NR_PRODUCTS, self.last_week))
-        self.shopper_coupon_history = np.zeros((self.NR_PRODUCTS, self.last_week))
+        self.shopper_purchase_history = np.zeros((self.NR_PRODUCTS, self.last_week+1))
+        self.shopper_coupon_history = np.zeros((self.NR_PRODUCTS, self.last_week+1))
         
-        for week in range(self.last_week):
+        for week in range(self.last_week+1):
 
             week_products = self.shopper_baskets.get(week=week)
             for product in week_products:
