@@ -41,16 +41,21 @@ class DataStreamer:
     >>> data_streamer.reset() # reset iterators if needed
     >>> data_streamer.close() # close connections once done
     """
-    _shopper_baskets: ShopperData
-    _shopper_coupon_products: ShopperData
-    _shopper_coupon_values: ShopperData
+    shopper_baskets: ShopperData
+    shopper_coupon_products: ShopperData
+    shopper_coupon_values: ShopperData
+
+    shopper_purchase_history: np.ndarray
+    shopper_coupon_history: np.ndarray
 
     def __init__(self, 
         baskets_streamer: ShopperDataStreamer,
         coupon_products_streamer: ShopperDataStreamer,
         coupon_values_streamer: ShopperDataStreamer,
-        time_window: int = 10,
-        first_week: int = 0,
+        time_window_recent_history: int = 5,
+        time_window_extended_history: int = 25,
+        dimension_extended_history: int = 5,
+        #first_week: int = 0,
         last_week: Optional[int] = None,
         last_shopper: Optional[int] = None,
         ) -> None:
@@ -59,8 +64,11 @@ class DataStreamer:
         self.coupon_products_streamer = coupon_products_streamer
         self.coupon_values_streamer = coupon_values_streamer
 
-        self.time_window = time_window
-        self.first_week = first_week
+        self.TW_RECENT = time_window_recent_history
+        self.TW_EXTENDED = time_window_extended_history
+        self.DIM_EXTENDED = dimension_extended_history
+
+        self.first_week = self.TW_RECENT + self.TW_EXTENDED*self.DIM_EXTENDED
         self.last_week = set_limit(self.baskets_streamer.max_week, last_week)
         self.last_shopper = set_limit(self.baskets_streamer.max_shopper, last_shopper)
 
@@ -95,32 +103,57 @@ class DataStreamer:
     
     def __next__(self) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
         """
-        Returns:
-        - purchase history matrix (dimension: products, weeks)
-        - purchase frequency vector up until week `t` (dim: products)
-        - coupon values vector in week `t+1` (dim: products)
-        - purchases in week `t+1` (dim: products)
+        Iterator loops over shoppers and weeks and returns (for a shopper `s` and  week `t`):
+
+        - recent purchase history, binary encoded, last `time_window` weeks before `t+1` (not incl.)
+        - extended purchase history, frequencies of the preceding `time_window`*`frequency_par` weeks
+        - recent coupon history, (0, 1)-encoded, last `time_window` weeks and `t+1` (incl.)
+        - purchases in week `t+1` (prediction target)
+
+        All matrices have products as row-dimension and weeks as column-dimension.
+
+        E.g., for `time_window=5`, `frequency_par=5` and `t=89`:
+        - recent purchase history in weeks `85, 86, 87, 88, 89`
+        - extended purchase history in weeks `60-64, 65-69, 70-74, 75-79, 80-84` (avg frequencies)
+        - recent coupon history in weeks `85, 86, 87, 88, 89, 90`
+        - purchases in week `90`
+
+        # TODO improve this text
+        # TODO actually add frequency_par parameter
+
         """
         if not self._active:
-            self._get_next_shopper()
+            self._query_next_shopper()
             self._active = True
 
-        history = self._get_history(week=self._current_week)
-        frequencies = self._get_frequencies(week=self._current_week)
-        coupons = self._get_coupons(week=self._current_week+1)
-        purchases = self._get_true_purchases(week=self._current_week+1)
-
+        history = self._get_recent_history(
+            week_from = self._current_week - self.TW_RECENT + 1,
+            week_to = self._current_week
+        )
+        frequencies = self._get_extended_history(
+            week_from = self._current_week - self.TW_RECENT - self.TW_EXTENDED*self.DIM_EXTENDED + 1,
+            week_to = self._current_week - self.TW_RECENT,
+            agg_by = self.DIM_EXTENDED
+        )
+        coupons = self._get_coupons(
+            week_from = self._current_week - self.TW_RECENT + 1,
+            week_to = self._current_week + 1
+        )
+        purchases = self._get_true_purchases(
+            week = self._current_week + 1
+        )
+        
         if self._current_week == (self.last_week - 1):
             # if we reached the last week for the current shopper, load next shopper
             self._current_week = self.first_week
-            self._get_next_shopper()
+            self._query_next_shopper()
         else:
             # else get ready to return next week
             self._current_week += 1
 
         return history, frequencies, coupons, purchases
 
-    def _get_next_shopper(self) -> None:
+    def _query_next_shopper(self) -> None:
         """
         Queries shopper data (baskets, coupon products, and coupon values)
         for the next shopper and stores it in memory.
@@ -142,68 +175,66 @@ class DataStreamer:
 
         self._current_shopper = self.shopper_baskets.shopper
 
+        # construct shopper purchase and coupon history
+
+        self.shopper_purchase_history = np.zeros((self.NR_PRODUCTS, self.last_week))
+        self.shopper_coupon_history = np.zeros((self.NR_PRODUCTS, self.last_week))
+        
+        for week in range(self.last_week):
+
+            week_products = self.shopper_baskets.get(week=week)
+            for product in week_products:
+                self.shopper_purchase_history[product, week] = 1
+
+            week_discounts_zipper = zip(
+                self.shopper_coupon_products.get(week=week),
+                self.shopper_coupon_values.get(week=week)
+            )
+            for product, discount in week_discounts_zipper:
+                self.shopper_coupon_history[product, week] = discount / 100
+
     def _get_true_purchases(self, week: int) -> np.ndarray:
         """
         Returns a {0,1}-array with products purchased by the in-memory shopper in a given `week`.
         """
-        purchased = np.zeros((self.NR_PRODUCTS), dtype=int)
+        return self.shopper_purchase_history[:, week]
 
-        for product in self.shopper_baskets.get(week=week):
-            purchased[product] += 1
-        
-        return purchased
-
-    def _get_coupons(self, week: int) -> np.ndarray:
+    def _get_recent_history(self, week_from: int, week_to: int) -> np.ndarray:
         """
-        Returns a [0,1]-array of coupon amounts given to a shopper in a given week.
+        Returns a {0,1}-matrix with products purchased by the in-memory shopper in weeks (incl.)
+        `week_from` -- `week_to`
         """
-        coupons = np.zeros((self.NR_PRODUCTS), dtype=int)
-        zipper = zip(
-            self.shopper_coupon_products.get(week=week),
-            self.shopper_coupon_values.get(week=week)
-        )
-        for prod, discount in zipper:
-            coupons[prod] = discount
-        
-        return coupons / 100
+        return self.shopper_purchase_history[:, week_from:week_to+1]
 
-    def _get_history(self, week: int) -> np.ndarray:
+    def _get_extended_history(self, week_from: int, week_to: int, agg_by: int) -> np.ndarray:
         """
-        Returns a {0,1}-matrix of purchases by a shopper in the given week.
+        Returns a [0,1]-matrix with product purchase frequencies by the in-memory shopper in weeks (incl.)
+        `week_from` -- `week_to`, with each `agg_by` weeks aggregated (avg) into one column
         """
-        return self._calc_history(
-            week_from=week - self.time_window + 1,
-            week_to=week
-        )
+        extended_history = np.zeros((self.NR_PRODUCTS, self.DIM_EXTENDED))
 
-    def _get_frequencies(self, week: int) -> np.ndarray:
+        #history = self.shopper_purchase_history[:, week_from:week_to+1]
+
+        for column in range(self.DIM_EXTENDED):
+            extended_history[:, column] = (
+                self.shopper_purchase_history[:, week_from:week_from+self.TW_EXTENDED]
+                .sum(axis=1) / self.TW_EXTENDED
+            )
+            week_from = week_from + self.TW_EXTENDED
+
+        return extended_history
+
+    def _get_coupons(self, week_from: int, week_to: int) -> np.ndarray:
         """
-        Returns a [0,1]-array of purchase frequencies given to a shopper until (incl.) the given week.
+        Returns a [0,1]-matrix with coupons given to the in-memory shopper in weeks (incl.)
+        `week_from` -- `week_to`
         """
-        return self._calc_history( # type: ignore
-            week_from=0,
-            week_to=week
-        ).sum(axis=1) / (week+1)
+        return self.shopper_coupon_history[:, week_from:week_to+1]
 
-    def _calc_history(self, week_from: int, week_to: int) -> np.ndarray:
-        """
-        Returns a 0-1 matrix with history of shopper purchases for weeks from `week_from`
-        to `week_to` (incl.), with rows=products and cols=weeks.
-
-        A zero padding is appended for weeks preceding the first known week.
-        """
-        shopper_history = np.zeros((self.NR_PRODUCTS, week_to-week_from+1), dtype=int)
-
-        for column, week in enumerate(range(week_to, week_from-1, -1)):
-
-            if week < 0:
-                continue
-            
-            prods = self.shopper_baskets.get(week=week)
-            for prod in prods:
-                shopper_history[prod, column] = 1
-
-        return shopper_history
+    def __repr__(self) -> str:
+        return (
+            f'{self.__class__.__name__} at shopper={self._current_shopper}/{self.last_shopper} '
+            f'and week={self._current_week}/{self.last_week}')
 
 
 class BatchStreamer:
@@ -227,7 +258,7 @@ class BatchStreamer:
         """
         """
         nr_products = self.data_streamer.NR_PRODUCTS
-        time_window = self.data_streamer.time_window
+        time_window = 0#self.data_streamer.time_window # TODO
 
         history = np.zeros((self.batch_size, nr_products, time_window))
         frequencies = np.zeros((self.batch_size, nr_products))
@@ -257,7 +288,9 @@ if __name__ == '__main__':
         baskets_streamer=baskets_streamer,
         coupon_products_streamer=coupon_products_streamer,
         coupon_values_streamer=coupon_values_streamer,
-        time_window=10
+        time_window_recent_history=5,
+        time_window_extended_history=5,
+        dimension_extended_history=5
     )
     batch_streamer = BatchStreamer(
         data_streamer=data_streamer,
@@ -265,10 +298,10 @@ if __name__ == '__main__':
     )
 
     # test integrity
-    history0, frequencies0, _, purchases1 = next(data_streamer)
-    history1, *_ = next(data_streamer)
+    #history0, frequencies0, _, purchases1 = next(data_streamer)
+    #history1, *_ = next(data_streamer)
 
-    assert sum(sum(history0)) > 0 # type: ignore
-    assert all(history0[:,0] == frequencies0)
-    assert all(history1[:,0] == purchases1)
-    data_streamer.reset()
+    #assert sum(sum(history0)) > 0 # type: ignore
+    #assert all(history0[:,0] == frequencies0)
+    #assert all(history1[:,0] == purchases1)
+    #data_streamer.reset()
