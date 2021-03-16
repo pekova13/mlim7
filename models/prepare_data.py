@@ -238,8 +238,8 @@ class DataStreamer:
 
     def __repr__(self) -> str:
         return (
-            f'{self.__class__.__name__} at shopper={self._current_shopper}/{self.last_shopper} '
-            f'and week={self._current_week}/{self.last_week}')
+            f'{self.__class__.__name__} at shopper={self._current_shopper}/{self.last_shopper+1} '
+            f'and week={self._current_week}/{self.last_week+1}')
 
 
 class BatchStreamer:
