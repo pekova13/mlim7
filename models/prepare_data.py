@@ -11,6 +11,22 @@ sys.path.append('.')
 from models.shopper_data import ShopperDataStreamer, ShopperData
 
 
+def zero_lower_bound(v: int):
+    """
+    Returns 0 if value `v` is less than 0, else returns `v`.
+    """
+    return v if v > 0 else 0
+
+
+def set_limit(v1: int, v2: Optional[int]) -> int:
+    """
+    """
+    if v2 and v2 < v1 and v2 > 0:
+        return v2
+    else:
+        return v1
+
+
 class DataStreamer:
     """
     Usage:
