@@ -98,7 +98,7 @@ class ShopperDataWriter:
                         row = [shopper, week] + self.data[shopper][week]
                     except KeyError:
                         # there seem to be some missing values in the dataset, e.g. for shopper=56503 week=0
-                        print(f'missing values for {shopper=} {week=}')
+                        print(f'missing values for shopper={shopper} week={week}')
                         row = [shopper, week]
                     writer.writerow(row)
 
