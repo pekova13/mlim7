@@ -258,24 +258,23 @@ class BatchStreamer:
         """
         """
         nr_products = self.data_streamer.NR_PRODUCTS
-        time_window = 0#self.data_streamer.time_window # TODO
 
-        history = np.zeros((self.batch_size, nr_products, time_window))
-        frequencies = np.zeros((self.batch_size, nr_products))
-        coupons = np.zeros((self.batch_size, nr_products))
+        recent_history = np.zeros((self.batch_size, nr_products, self.data_streamer.TW_RECENT))
+        extended_history = np.zeros((self.batch_size, nr_products, self.data_streamer.DIM_EXTENDED))
+        coupons = np.zeros((self.batch_size, nr_products, self.data_streamer.TW_RECENT+1))
         purchases = np.zeros((self.batch_size, nr_products))
 
         for i in range(self.batch_size):
             try:
                 h, f, c, p = next(self.data_streamer)
-                history[i,:,:] = h
-                frequencies[i,:] = f
-                coupons[i,:] = c
+                recent_history[i,:,:] = h
+                extended_history[i,:,:] = f
+                coupons[i,:,:] = c
                 purchases[i,:] = p
             except StopIteration:
                 raise StopIteration
         
-        return history, frequencies, coupons, purchases
+        return recent_history, extended_history, coupons, purchases
 
 
 if __name__ == '__main__':
