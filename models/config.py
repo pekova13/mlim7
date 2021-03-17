@@ -13,3 +13,8 @@ streamer_config = {
     'dimension_extended_history': 5,
     'last_shopper': 1999
 }
+
+coupon_config = {
+    'nr_coupons': 5,
+    'discounts': (0.15, 0.2, 0.25, 0.3)
+}
