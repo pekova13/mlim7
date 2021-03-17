@@ -317,33 +317,26 @@ class BatchStreamer:
 
 if __name__ == '__main__':
 
+    from models.config import streamer_config, TRAIN_LAST_WEEK, BATCH_SIZE 
+
     baskets_streamer = ShopperDataStreamer('baskets.csv')
     coupon_products_streamer = ShopperDataStreamer('coupon_products.csv')
     coupon_values_streamer = ShopperDataStreamer('coupon_values.csv')
-
-    BATCH_SIZE = 10
-    TRAIN_LAST_WEEK = 79
-
-    # weeks 0-29 are used only as history
-    # train: predict weeks 30 to 79
-    # test:  predict weeks 80 to 89
-    # assignment: predict week 90
 
     data = {
         'baskets_streamer': baskets_streamer,
         'coupon_products_streamer': coupon_products_streamer,
         'coupon_values_streamer': coupon_values_streamer
     }
-    config = {
-        'time_window_recent_history': 5,
-        'time_window_extended_history': 5,
-        'dimension_extended_history': 5,
-        'last_shopper': 1999
-    }
 
-    data_streamer_train = DataStreamer(**data, **config, last_week=TRAIN_LAST_WEEK)
-    data_streamer_test = DataStreamer(**data, **config, first_week=TRAIN_LAST_WEEK+1)
-    data_streamer_final = DataStreamer(**data, **config, after_last_week=True)
+    # weeks 0-29 are used only as history
+    # train: predict weeks 30 to 79
+    # test:  predict weeks 80 to 89
+    # assignment: predict week 90
+
+    data_streamer_train = DataStreamer(**data, **streamer_config, last_week=TRAIN_LAST_WEEK)
+    data_streamer_test = DataStreamer(**data, **streamer_config, first_week=TRAIN_LAST_WEEK+1)
+    data_streamer_final = DataStreamer(**data, **streamer_config, after_last_week=True)
 
     batch_streamer_train = BatchStreamer(data_streamer_train, batch_size=BATCH_SIZE)
     batch_streamer_test = BatchStreamer(data_streamer_test, batch_size=BATCH_SIZE)
