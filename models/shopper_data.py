@@ -1,9 +1,8 @@
 
 from __future__ import annotations
 
-import argparse
 import csv
-from typing import Dict, List, Optional
+from typing import Dict, List
 
 import pandas as pd
 from tqdm import tqdm
@@ -184,28 +183,3 @@ class ShopperDataStreamer:
             f'<{self.__class__.__name__} with {self.max_shopper+1} shoppers, '
             f'{self.max_week+1} weeks, and {self.max_value+1} {self.target}s>'
         )
-
-
-if __name__ == '__main__':
-
-    parser = argparse.ArgumentParser()
-    parser.add_argument('limit', type=int, default=0, nargs='?')
-    kwargs = parser.parse_args()
-
-    baskets_df = pd.read_parquet('data/baskets.parquet')
-    coupons_df = pd.read_parquet('data/coupons.parquet')
-
-    if kwargs.limit > 0:
-        print(f'sample limited to {kwargs.limit} shoppers')
-        baskets_df = baskets_df[baskets_df['shopper'] < kwargs.limit]
-        coupons_df = coupons_df[coupons_df['shopper'] < kwargs.limit]
-
-        assert isinstance(baskets_df, pd.DataFrame) # for pylance
-        assert isinstance(coupons_df, pd.DataFrame)
-
-    ShopperDataWriter().fit(df=baskets_df, target='product').write('baskets.csv')
-    ShopperDataWriter().fit(df=coupons_df, target='product').write('coupon_products.csv')
-    ShopperDataWriter().fit(df=coupons_df, target='discount').write('coupon_values.csv')
-
-    prices = baskets_df.groupby('product')['price'].agg('median')
-    prices.to_csv('prices.csv', index=False)

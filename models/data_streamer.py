@@ -313,63 +313,7 @@ class BatchStreamer:
         """
         self.data_streamer.reset()
 
-
-if __name__ == '__main__':
-
-    from models.config import streamer_config, TRAIN_LAST_WEEK, BATCH_SIZE 
-
-    baskets_streamer = ShopperDataStreamer('baskets.csv')
-    coupon_products_streamer = ShopperDataStreamer('coupon_products.csv')
-    coupon_values_streamer = ShopperDataStreamer('coupon_values.csv')
-
-    data = {
-        'baskets_streamer': baskets_streamer,
-        'coupon_products_streamer': coupon_products_streamer,
-        'coupon_values_streamer': coupon_values_streamer
-    }
-
-    # weeks 0-29 are used only as history
-    # train: predict weeks 30 to 79
-    # test:  predict weeks 80 to 89
-    # assignment: predict week 90
-
-    data_streamer_train = DataStreamer(**data, **streamer_config, last_week=TRAIN_LAST_WEEK)
-    data_streamer_test = DataStreamer(**data, **streamer_config, first_week=TRAIN_LAST_WEEK+1)
-    data_streamer_final = DataStreamer(**data, **streamer_config, after_last_week=True)
-
-    batch_streamer_train = BatchStreamer(data_streamer_train, batch_size=BATCH_SIZE)
-    batch_streamer_test = BatchStreamer(data_streamer_test, batch_size=BATCH_SIZE)
-    batch_streamer_final = BatchStreamer(data_streamer_final, batch_size=1)
-
-
-    # TRAIN LOOP EXAMPLE
-    raise NotImplementedError('code below should not be executed as is')
-
-    class Model:
-        def train(self, *args): pass
-        def predict(self, *args): pass
-        def evaluate(self, *args): pass
-
-    model = Model()
-
-    def generate_coupons(): pass
-    def evaluate_uplift(_): pass
-
-    # training
-    batch_streamer_train.reset()
-    for H, F, C, P in batch_streamer_train:
-        model.train(H, F, C, P)
-    
-    # testing
-    batch_streamer_test.reset()
-    for H, F, C, P in batch_streamer_train:
-        pred = model.predict(H, F, C)
-        model.evaluate(pred, P)
-
-    # final preds for assignment
-
-    batch_streamer_final.reset()
-    for H, F, C, _ in batch_streamer_final:
-        C[:, -1] = generate_coupons()
-        pred = model.predict(H, F, C)
-        evaluate_uplift(pred)
+    def close(self) -> None:
+        """
+        """
+        self.data_streamer.close()

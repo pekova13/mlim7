@@ -7,7 +7,7 @@ from dataclasses import dataclass
 from typing import List, Sequence
 
 import numpy as np
-from tqdm import tqdm
+from tensorflow.keras import Model
 
 
 @dataclass
@@ -141,51 +141,3 @@ class CouponOptimizer:
             writer.writerow(['Optimized revenue', sum(self.revenue_optimal)])
             writer.writerow(['Uplift', sum(self.revenue_uplift)])
             writer.writerow(['Nr. of randomized coupons', random_coupons])
-
-
-
-if __name__ == '__main__':
-    from models.config import streamer_config, coupon_config
-    from models.prepare_data import BatchStreamer, DataStreamer
-    from models.shopper_data import ShopperDataStreamer
-
-    baskets_streamer = ShopperDataStreamer('baskets.csv')
-    coupon_products_streamer = ShopperDataStreamer('coupon_products.csv')
-    coupon_values_streamer = ShopperDataStreamer('coupon_values.csv')
-
-    data = {
-        'baskets_streamer': baskets_streamer,
-        'coupon_products_streamer': coupon_products_streamer,
-        'coupon_values_streamer': coupon_values_streamer
-    }
-
-    data_streamer_final = DataStreamer(**data, **streamer_config, after_last_week=True)
-    batch_streamer_final = BatchStreamer(data_streamer_final, batch_size=1) # one shopper at a time
-
-    # dummy model
-    class Model:
-        def predict(self, *a) -> np.ndarray: return np.zeros(250) 
-
-    coupon_optimizer = CouponOptimizer(
-        model=Model(),
-        prices=np.zeros(250),
-        **coupon_config,
-        generate_random=False
-    )
-    coupon_randomizer = CouponOptimizer(
-        model=Model(),
-        prices=np.zeros(250),
-        **coupon_config,
-        generate_random=True
-    )
-
-    for H, F, C, _ in tqdm(batch_streamer_final):
-        coupon_optimizer.optimize(H, F, C, shopper=data_streamer_final._current_shopper)
-        coupon_randomizer.optimize(H, F, C, shopper=data_streamer_final._current_shopper)
-
-    coupon_optimizer.write_coupons('coupon_index.csv')
-    coupon_optimizer.write_stats('coupons_stats_optimal.csv')
-
-    coupon_randomizer.write_coupons('coupon_index_random.csv')
-    coupon_randomizer.write_stats('coupons_stats_random.csv')
-        
