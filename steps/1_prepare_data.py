@@ -3,14 +3,16 @@ Step 1:
 prepare data from parquets into a easier to work with format
 """
 
+import sys
+sys.path.append('.')
+
 import pandas as pd
 
 from models.shopper_data import ShopperDataWriter
+from steps import config
 
 
 if __name__ == '__main__':
-
-    from steps import config
 
     baskets_df = pd.read_parquet(config.BASKETS_PARQUET_PATH)
     coupons_df = pd.read_parquet(config.COUPONS_PARQUET_PATH)

@@ -3,15 +3,18 @@ Step 2:
 train model
 """
 
-from models.model import build_model, train_model
+import sys
+sys.path.append('.')
+
 from tensorflow.keras.losses import BinaryCrossentropy
 from tensorflow.keras.optimizers import Adam
 
+from models.model import build_model, train_model
+from steps.load_data import batch_streamer_train, batch_streamer_test
+from steps import config
+
 
 if __name__ == '__main__':
-
-    from steps.load_data import batch_streamer_train, batch_streamer_test
-    from steps import config
     
     model = build_model(**config.model_parms)
     print(model.summary())

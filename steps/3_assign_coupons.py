@@ -2,17 +2,20 @@
 Step 3
 
 """
+import sys
+sys.path.append('.')
+
 import numpy as np
 import pandas as pd
 from tqdm import tqdm
-from models.model import build_model
+
 from models.coupon_assignment import CouponOptimizer
+from models.model import build_model
+from steps.load_data import batch_streamer_final, data_streamer_final
+from steps import config
 
 
 if __name__ == '__main__':
-
-    from steps import config
-    from steps.load_data import batch_streamer_final, data_streamer_final
 
     model = build_model(**config.model_parms)
     model.load_weights(config.MODEL_WEIGHTS_PATH)

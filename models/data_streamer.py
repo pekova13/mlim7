@@ -1,11 +1,8 @@
 
 from __future__ import annotations
 
-import sys
 from typing import Optional, Tuple
 import numpy as np
-
-sys.path.append('.')
 
 from models.shopper_data import ShopperDataStreamer, ShopperData
 
