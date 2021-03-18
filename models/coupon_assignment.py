@@ -105,7 +105,9 @@ class CouponOptimizer:
         """
         Predict purchase probabilities, calculate and return total expected revenue.
         """
-        return sum(self.model.predict(H, F, C) * self.prices)
+        sigmoid_proba = self.model([H, F, C], training=False)
+        # TODO reshape
+        return sum(sigmoid_proba * self.prices)
 
     def _generate_random_coupon(self, shopper: int, i: int) -> Coupon:
         """

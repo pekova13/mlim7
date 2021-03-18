@@ -79,9 +79,8 @@ def train_model(
         for H, F, C, P in batch_streamer_train:
 
             with GradientTape() as tape:
-
                 # generate and evaluate predictions
-                sigmoid_proba = model([H, F, C, P], training=True)
+                sigmoid_proba = model([H, F, C], training=True)
                 loss_value = loss_fn(P, sigmoid_proba)
                 loss_array_train.append(loss_value)
 
@@ -98,7 +97,7 @@ def train_model(
         for H, F, C, P in batch_streamer_test:
 
             # generate and evaluate predictions
-            sigmoid_proba=model([H, F, C, P], training=False)
+            sigmoid_proba=model([H, F, C], training=False)
             loss_value = loss_fn(P, sigmoid_proba)
             loss_array_test.append(loss_value)
 
