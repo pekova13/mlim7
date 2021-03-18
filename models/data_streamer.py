@@ -272,7 +272,7 @@ class BatchStreamer:
 
     Usage:
     >>> batch_streamer = BatchStreamer(data_streamer, batch_size)
-    >>> for _ in batch_streamer:
+    >>> for history, frequencies, coupons, purchases in batch_streamer:
             pass
     """
 
@@ -285,6 +285,7 @@ class BatchStreamer:
     
     def __next__(self) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
         """
+        Same as DataStreamer.__next__ but now as mini-batches.
         """
         nr_products = self.data_streamer.NR_PRODUCTS
 
@@ -307,16 +308,19 @@ class BatchStreamer:
 
     def reset(self) -> None:
         """
+        Reset all iterators.
         """
         self.data_streamer.reset()
 
     def close(self) -> None:
         """
+        Close all connections.
         """
         self.data_streamer.close()
 
     @property
     def current_shopper(self) -> int:
         """
+        Returns ID of the current shopper.
         """
         return self.data_streamer._current_shopper
