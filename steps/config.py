@@ -45,7 +45,7 @@ TRAIN_LAST_WEEK = 79
 # assignment: predict week 90
 
 LEARNING_RATE = 1e3
-EPOCHS = 10
+NR_EPOCHS = 10
 BATCH_SIZE = 10
 
 streamer_parms= {

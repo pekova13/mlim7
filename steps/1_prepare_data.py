@@ -1,6 +1,20 @@
 """
-Step 1: 
-prepare data from parquets into a easier to work with format
+Step 1: prepare data
+
+Transform data from parquet files into the custom ShopperData format.
+(Why do this? It enables much quicker data streaming when working with big data.)
+
+config:
+- LIMIT_SHOPPERS_DATA_PREP: if -1, parquet files are fully transformed into ShopperData format
+                            (this can take >2 hours depending on your machine)
+                            if some positive integer value, then only first N shoppers will be taken
+
+- BASKETS_PARQUET_PATH: path to baskets.parquet
+- COUPONS_PARQUET_PATH: path to coupons.parquet
+- BASKETS_PATH:         path where baskets ShopperData will be saved
+- COUPON_PRODUCTS_PATH: path where coupon product ShopperData will be saved
+- COUPON_VALUES_PATH:   path where coupon value ShopperData will be saved
+- PRICES_PATH:          path where median prices will be saved
 """
 
 import sys
