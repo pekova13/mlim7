@@ -2,6 +2,8 @@
 Step 3
 
 """
+import numpy as np
+import pandas as pd
 from tqdm import tqdm
 from models.model import build_model
 from models.coupon_assignment import CouponOptimizer
@@ -15,8 +17,7 @@ if __name__ == '__main__':
     model = build_model(**config.model_parms)
     model.load_weights(config.MODEL_WEIGHTS_PATH)
 
-    import numpy as np
-    prices = np.zeros(250)
+    prices: np.ndarray = pd.read_csv(config.PRICES_PATH).price.to_numpy()
 
     coupon_optimizer = CouponOptimizer(
         model=model,
