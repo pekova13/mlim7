@@ -314,3 +314,9 @@ class BatchStreamer:
         """
         """
         self.data_streamer.close()
+
+    @property
+    def current_shopper(self) -> int:
+        """
+        """
+        return self.data_streamer._current_shopper

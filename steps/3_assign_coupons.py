@@ -11,7 +11,7 @@ from tqdm import tqdm
 
 from models.coupon_assignment import CouponOptimizer
 from models.model import build_model
-from steps.load_data import batch_streamer_final, data_streamer_final
+from steps.load_data import batch_streamer_final
 from steps import config
 
 
@@ -36,8 +36,8 @@ if __name__ == '__main__':
     )
 
     for H, F, C, _ in tqdm(batch_streamer_final):
-        coupon_optimizer.optimize(H, F, C, shopper=data_streamer_final._current_shopper)
-        coupon_randomizer.optimize(H, F, C, shopper=data_streamer_final._current_shopper)
+        coupon_optimizer.optimize(H, F, C, shopper=batch_streamer_final.current_shopper)
+        coupon_randomizer.optimize(H, F, C, shopper=batch_streamer_final.current_shopper)
 
     coupon_optimizer.write_coupons(config.COUPONS_PATH)
     coupon_optimizer.write_stats(config.COUPONS_STATS_PATH)
