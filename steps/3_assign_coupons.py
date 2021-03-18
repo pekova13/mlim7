@@ -39,9 +39,9 @@ if __name__ == '__main__':
         coupon_optimizer.optimize(H, F, C, shopper=data_streamer_final._current_shopper)
         coupon_randomizer.optimize(H, F, C, shopper=data_streamer_final._current_shopper)
 
-    coupon_optimizer.write_coupons('coupon_index.csv')
-    coupon_optimizer.write_stats('coupons_stats_optimal.csv')
+    coupon_optimizer.write_coupons(config.COUPONS_PATH)
+    coupon_optimizer.write_stats(config.COUPONS_STATS_PATH)
 
-    coupon_randomizer.write_coupons('coupon_index_random.csv')
-    coupon_randomizer.write_stats('coupons_stats_random.csv')
+    coupon_randomizer.write_coupons(config.COUPONS_RANDOM_PATH)
+    coupon_randomizer.write_stats(config.COUPONS_STATS_RANDOM_PATH)
 

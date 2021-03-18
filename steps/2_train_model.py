@@ -25,13 +25,13 @@ from tensorflow.keras.losses import BinaryCrossentropy
 from tensorflow.keras.optimizers import Adam
 
 from models.model import build_model, train_model
-from steps.load_data import batch_streamer_train, batch_streamer_test
+from steps.load_data import batch_streamer_train, batch_streamer_test, NR_PRODUCTS
 from steps import config
 
 
 if __name__ == '__main__':
     
-    model = build_model(**config.model_parms)
+    model = build_model(**config.model_parms, NR_PRODUCTS=NR_PRODUCTS)
     print(model.summary())
 
     # tf.keras.utils.plot_model(model)

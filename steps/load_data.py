@@ -24,3 +24,7 @@ data_streamer_final = DataStreamer(**data, **config.streamer_parms, after_last_w
 batch_streamer_train = BatchStreamer(data_streamer_train, batch_size=config.BATCH_SIZE)
 batch_streamer_test = BatchStreamer(data_streamer_test, batch_size=config.BATCH_SIZE)
 batch_streamer_final = BatchStreamer(data_streamer_final, batch_size=1) # 1 shopper at a time
+
+
+# nr of products can't be specified in config but is observed from the data
+NR_PRODUCTS = data_streamer_train.NR_PRODUCTS
