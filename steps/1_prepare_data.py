@@ -36,7 +36,7 @@ if __name__ == '__main__':
     baskets_df = pd.read_parquet(config.BASKETS_PARQUET_PATH)
     coupons_df = pd.read_parquet(config.COUPONS_PARQUET_PATH)
 
-    assert_df_columns(baskets_df, ('shopper', 'week', 'product'))
+    assert_df_columns(baskets_df, ('shopper', 'week', 'product', 'price'))
     assert_df_columns(coupons_df, ('shopper', 'week', 'product', 'discount'))
 
     if config.LIMIT_SHOPPERS_DATA_PREP > 0:
