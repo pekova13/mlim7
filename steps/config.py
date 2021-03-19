@@ -56,10 +56,19 @@ coupon_parms = {
 
 # import/export paths
 import os
+
+_DATA_FOLDER = 'data'
+_OUT_FOLDER = 'coupons'
+
+if not os.path.exists(_DATA_FOLDER):
+    os.mkdir(_DATA_FOLDER)
+if not os.path.exists(_OUT_FOLDER):
+    os.mkdir(_OUT_FOLDER)
+
 def data_path(path: str) -> str:
-    return os.path.join('data', path)
+    return os.path.join(_DATA_FOLDER, path)
 def out_path(path: str) -> str:
-    return os.path.join('out', path)
+    return os.path.join(_OUT_FOLDER, path)
 
 # input files
 BASKETS_PARQUET_PATH = data_path('baskets.parquet')
