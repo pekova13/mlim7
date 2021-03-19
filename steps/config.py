@@ -21,16 +21,23 @@ NR_EPOCHS = 10
 TRAIN_LAST_WEEK = 79
 
 # Step 3: Assign coupons
+LIMIT_SHOPPERS_COUPONS = 2000
 NR_COUPONS = 5
-DISCOUNTS = (0.15, 0.2, 0.25, 0.3)
+DISCOUNTS = (0.3, 0.25, 0.2, 0.15)
 
 
 # parms dicts
-streamer_parms= {
+streamer_train_parms= {
     'time_window_recent_history': TIME_WINDOW_RECENT_HISTORY,
     'time_window_extended_history': TIME_WINDOW_EXTENDED_HISTORY,
     'dimension_extended_history': DIMENSION_EXTENDED_HISTORY,
     'last_shopper': LIMIT_SHOPPERS_TRAINING,
+}
+streamer_coupon_parms= {
+    'time_window_recent_history': TIME_WINDOW_RECENT_HISTORY,
+    'time_window_extended_history': TIME_WINDOW_EXTENDED_HISTORY,
+    'dimension_extended_history': DIMENSION_EXTENDED_HISTORY,
+    'last_shopper': LIMIT_SHOPPERS_COUPONS,
 }
 model_parms = {
     'HISTORY_DIM': TIME_WINDOW_RECENT_HISTORY,
@@ -63,10 +70,11 @@ COUPON_VALUES_PATH = data_path('coupon_values.csv')
 PRICES_PATH = data_path('prices.csv')
 
 # trained model weights
-MODEL_WEIGHTS_PATH = data_path('model_weights.pkl')
+MODEL_WEIGHTS_PATH = data_path('CNN_weights')
 
 # coupons
-COUPONS_PATH = data_path('coupon_index.csv')
-COUPONS_RANDOM_PATH = data_path('coupon_random.csv')
-COUPONS_STATS_PATH = data_path('coupon_stats.csv')
-COUPONS_STATS_RANDOM_PATH = data_path('coupon_stats_random.csv')
+COUPONS_PRED_STATS_OPTIMAL_PATH = out_path('coupons_pred_stats_optimal.csv')
+COUPONS_PRED_STATS_RANDOM_PATH = out_path('coupons_pred_stats_random.csv')
+
+COUPONS_PRED_OPTIMAL_PATH = out_path('coupons_pred_optimal.csv')
+COUPONS_PRED_RANDOM_PATH = out_path('coupons_pred_random.csv')

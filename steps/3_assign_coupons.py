@@ -11,17 +11,20 @@ from tqdm import tqdm
 
 from models.coupon_assignment import CouponOptimizer
 from models.model import build_model
-from steps.load_data import batch_streamer_final
+from steps.load_data import batch_streamer_90
 from steps import config
 
 
 if __name__ == '__main__':
 
     model = build_model(**config.model_parms)
-    model.load_weights(config.MODEL_WEIGHTS_PATH)
+    _ = model.load_weights(config.MODEL_WEIGHTS_PATH)
 
     prices: np.ndarray = pd.read_csv(config.PRICES_PATH).price.to_numpy()
 
+    assert prices.shape[0] == batch_streamer_90.nr_products
+
+    # make predictions for week 90
     coupon_optimizer = CouponOptimizer(
         model=model,
         prices=prices,
@@ -35,13 +38,22 @@ if __name__ == '__main__':
         generate_random=True
     )
 
-    for H, F, C, _ in tqdm(batch_streamer_final):
-        coupon_optimizer.optimize(H, F, C, shopper=batch_streamer_final.current_shopper)
-        coupon_randomizer.optimize(H, F, C, shopper=batch_streamer_final.current_shopper)
+    np.random.seed(config.LIMIT_SHOPPERS_COUPONS)
+    batch_streamer_90.reset()
 
-    coupon_optimizer.write_coupons(config.COUPONS_PATH)
-    coupon_optimizer.write_stats(config.COUPONS_STATS_PATH)
+    for H, F, C, _ in tqdm(batch_streamer_90, total=config.LIMIT_SHOPPERS_COUPONS):
+        coupon_optimizer.optimize(H, F, C, shopper=batch_streamer_90.current_shopper)
+        coupon_randomizer.optimize(H, F, C, shopper=batch_streamer_90.current_shopper)
 
-    coupon_randomizer.write_coupons(config.COUPONS_RANDOM_PATH)
-    coupon_randomizer.write_stats(config.COUPONS_STATS_RANDOM_PATH)
+        if batch_streamer_90.current_shopper % 20 == 0:
+            coupon_optimizer.write_stats(config.COUPONS_PRED_STATS_OPTIMAL_PATH)
+            coupon_randomizer.write_stats(config.COUPONS_PRED_STATS_RANDOM_PATH)
 
+
+    coupon_optimizer.write_coupons(config.COUPONS_PRED_OPTIMAL_PATH)
+    coupon_optimizer.write_stats(config.COUPONS_PRED_STATS_OPTIMAL_PATH)
+
+    coupon_randomizer.write_coupons(config.COUPONS_PRED_RANDOM_PATH)
+    coupon_randomizer.write_stats(config.COUPONS_PRED_STATS_RANDOM_PATH)
+
+    batch_streamer_90.close() # close all connections
