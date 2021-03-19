@@ -37,12 +37,12 @@ In this step, the CNN model is built and trained as presented in the paper.
 
 ![model](model.png)
 
-Inputs:
+__Inputs__:
 * `H` = recent purchase history of a shopper (250x5; 5 most recent days)
 * `F` = extended purchase history (250x5; each column is a purchase frequency for five days s.t. 25 preceding days are considered)
 * `C` = coupon history (250x6; 5 most recent days plus the coupons in the prediction week)
 
-Target:
+__Target__:
 * `P` = actual purchases in the prediction week
 
 
@@ -51,3 +51,5 @@ Target:
 python steps/3_assign_coupons.py
 ````
 In this step, randomized and optimized coupons are assigned for the week 90 using the trained model from step 2 to predict the purchase probabilities.
+
+As expected, randomly assigned coupons lead to a decrease in revenue (cp. to no assigned coupons), whereas optimally assigned coupons lead to a significant revenue uplift.
