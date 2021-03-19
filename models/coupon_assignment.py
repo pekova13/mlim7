@@ -103,7 +103,11 @@ class CouponOptimizer:
                     [H_repeated, F_repeated, C_repeated], training=False
                     ).numpy() # type: ignore
 
-                pred_revenue = (pred_proba * prices).sum(axis=1) # revenue per discount combination
+                discounts = C_repeated[:, :, -1]
+                pred_revenue_vector = pred_proba * prices * (1-discounts)
+                assert pred_revenue_vector.shape == (self.nr_products, self.nr_products)
+
+                pred_revenue = pred_revenue_vector.sum(axis=1) # expected revenue per discount combination
                 best_product = pred_revenue.argmax()
                 best_revenue = pred_revenue.max()
 
@@ -131,10 +135,11 @@ class CouponOptimizer:
         Predict purchase probabilities for a mini-batch of size 1, 
         calculate and return total expected revenue.
         """
+        discounts = C[:, :, -1]
         sigmoid_proba: np.ndarray = self.model([H, F, C], training=False).numpy() # type: ignore
         assert sigmoid_proba.shape[0] == 1 # batch-size must be 1
 
-        revenue = (np.squeeze(sigmoid_proba, axis=0) * self.prices).sum()
+        revenue = (np.squeeze(sigmoid_proba, axis=0) * self.prices * (1-discounts)).sum()
         return revenue
 
     def _generate_random_coupon(self, shopper: int, i: int) -> Coupon:
