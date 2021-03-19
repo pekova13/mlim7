@@ -24,14 +24,23 @@ sys.path.append('.')
 from tensorflow.keras.losses import BinaryCrossentropy
 from tensorflow.keras.optimizers import Adam
 
-from models.model import build_model, train_model
+from models.model import build_naive_model, build_model, train_model
 from steps.load_data import batch_streamer_train, batch_streamer_test, NR_PRODUCTS
 from steps import config
 
 
 if __name__ == '__main__':
+
+    from argparse import ArgumentParser
+    parser = ArgumentParser()
+    parser.add_argument('-n', '--naive', dest='naive', action='store_true')
+    kwargs = parser.parse_args()
+
+    if kwargs.naive:
+        model = build_naive_model()
+    else:
+        model = build_model(**config.model_parms, NR_PRODUCTS=NR_PRODUCTS)
     
-    model = build_model(**config.model_parms, NR_PRODUCTS=NR_PRODUCTS)
     print(model.summary())
 
     optimizer = Adam(learning_rate=config.LEARNING_RATE)
@@ -43,7 +52,7 @@ if __name__ == '__main__':
         loss_fn=loss_fn,
         batch_streamer_train=batch_streamer_train,
         batch_streamer_test=batch_streamer_test,
-        epochs=config.NR_EPOCHS
+        epochs=1 if kwargs.naive else config.NR_EPOCHS
     )
 
     model.save_weights(config.MODEL_WEIGHTS_PATH)

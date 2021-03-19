@@ -2,7 +2,10 @@
 import sys
 sys.path.append('.')
 
+from typing import Sequence, Union
+
 import numpy as np
+from tqdm import tqdm
 from tensorflow import GradientTape
 from tensorflow.keras import Model, layers
 from tensorflow.keras.losses import Loss
@@ -58,14 +61,43 @@ def build_model(
     return model
 
 
+class NaiveModel:
+    """
+    A very naive model that returns random predictions
+    """
+    def __call__(self, input: Sequence[np.ndarray], *args, **kwargs) -> np.ndarray:
+        batch_size = input[0].shape[0]
+        nr_products = input[0].shape[1]
+
+        random_pred = np.array(
+            [np.random.rand() for i in range(batch_size * nr_products)]
+            ).reshape((batch_size, nr_products))
+
+        return random_pred
+
+    def save_weights(self, *args, **kwargs) -> None:
+        pass
+
+    def summary(self) -> str:
+        return 'This is a naive model'
+
+
+def build_naive_model(seed = 0, **kwargs):
+    """
+    Build a naive model to do a naive benchmark.
+    """
+    np.random.seed(seed)
+    return NaiveModel()
+
+
 def train_model(
-        model: Model,
+        model: Union[Model, NaiveModel],
         optimizer: Optimizer,
         loss_fn: Loss,
         batch_streamer_train: BatchStreamer,
         batch_streamer_test: BatchStreamer,
         epochs: int = 10,
-        ) -> Model:
+        ) -> Union[Model, NaiveModel]:
     """
     Train the previously built model as described in the paper.
     """
@@ -81,17 +113,21 @@ def train_model(
 
         # TRAIN
         batch_streamer_train.reset() # ensure that all iterators are reset
-        for H, F, C, P in batch_streamer_train:
+        for H, F, C, P in tqdm(batch_streamer_train):
 
-            with GradientTape() as tape:
-                # generate and evaluate predictions
-                sigmoid_proba = model([H, F, C], training=True)
-                loss_value = loss_fn(P, sigmoid_proba)
-                loss_array_train.append(loss_value)
+            # generate and evaluate predictions
+            sigmoid_proba = model([H, F, C], training=True)
+            loss_value = loss_fn(P, sigmoid_proba)
+            loss_array_train.append(loss_value)
 
+            if isinstance(model, NaiveModel):
+                pass
+            else:
                 # update weights with computed gradients
-                grads = tape.gradient(loss_value, model.trainable_weights)
-                optimizer.apply_gradients(zip(grads, model.trainable_weights))
+                with GradientTape() as tape:
+
+                    grads = tape.gradient(loss_value, model.trainable_weights)
+                    optimizer.apply_gradients(zip(grads, model.trainable_weights))
 
         mean_loss_current_epoch_train = np.array(loss_array_train).mean()
         loss_per_epoch_train.append(mean_loss_current_epoch_train)

@@ -45,6 +45,10 @@ __Inputs__:
 __Target__:
 * `P` = actual purchases in the prediction week
 
+### Naive benchmark (random predictions):
+````
+python steps/2_train_model.py --naive
+````
 
 ## Step 3. Assign coupons
 ````

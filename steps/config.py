@@ -4,7 +4,8 @@ See each step for more details.
 """
 
 # Step 1: Data preparation
-LIMIT_SHOPPERS_DATA_PREP = -1       # -1 to keep all
+#LIMIT_SHOPPERS_DATA_PREP = -1       # -1 to keep all
+LIMIT_SHOPPERS_DATA_PREP = 5999
 
 # Step 2: Model training - model architecture
 TIME_WINDOW_RECENT_HISTORY = 5
