@@ -18,6 +18,7 @@ config:
 """
 
 import sys
+from typing import Sequence
 sys.path.append('.')
 
 import pandas as pd
@@ -26,10 +27,17 @@ from models.shopper_data import ShopperDataWriter
 from steps import config
 
 
+def assert_df_columns(df: pd.DataFrame, columns: Sequence[str]):
+    assert all((column in df.columns) for column in columns)
+
+
 if __name__ == '__main__':
 
     baskets_df = pd.read_parquet(config.BASKETS_PARQUET_PATH)
     coupons_df = pd.read_parquet(config.COUPONS_PARQUET_PATH)
+
+    assert_df_columns(baskets_df, ('shopper', 'week', 'product'))
+    assert_df_columns(coupons_df, ('shopper', 'week', 'product', 'discount'))
 
     if config.LIMIT_SHOPPERS_DATA_PREP > 0:
 
@@ -45,4 +53,4 @@ if __name__ == '__main__':
     ShopperDataWriter().fit(df=coupons_df, target='discount').write(config.COUPON_VALUES_PATH)
 
     prices = baskets_df.groupby('product')['price'].agg('median')
-    prices.to_csv(config.PRICES_PATH, index=False)
+    prices.to_csv(config.PRICES_PATH, index=False) 
