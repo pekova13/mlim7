@@ -1,4 +1,7 @@
 
+import sys
+sys.path.append('.')
+
 import numpy as np
 from tensorflow import GradientTape
 from tensorflow.keras import Model, layers
@@ -108,3 +111,13 @@ def train_model(
         print(f'Avg loss train: {mean_loss_current_epoch_test}')
 
     return model
+
+
+if __name__ == '__main__':
+
+    # run me to generate the model plot
+
+    from tensorflow.keras.utils import plot_model
+
+    model = build_model()
+    plot_model(model, to_file='model.png', show_layer_names=False, rankdir='LR')

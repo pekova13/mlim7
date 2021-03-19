@@ -34,9 +34,6 @@ if __name__ == '__main__':
     model = build_model(**config.model_parms, NR_PRODUCTS=NR_PRODUCTS)
     print(model.summary())
 
-    # tf.keras.utils.plot_model(model)
-    # requires pydot
-
     optimizer = Adam(learning_rate=config.LEARNING_RATE)
     loss_fn = BinaryCrossentropy(from_logits=False)
 
