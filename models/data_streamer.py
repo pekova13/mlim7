@@ -323,4 +323,11 @@ class BatchStreamer:
         """
         Returns ID of the current shopper.
         """
-        return self.data_streamer._current_shopper
+        return self.data_streamer._current_shopper - 1
+
+    @property
+    def nr_products(self) -> int:
+        """
+        Returns number of products in the data streamer.
+        """
+        return self.data_streamer.NR_PRODUCTS
