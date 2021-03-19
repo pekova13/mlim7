@@ -16,6 +16,7 @@ def build_model(
         nr_filters: int = 18,
         ) -> Model:
     """
+    Build a CNN model as described in the paper.
     """
 
     input_H = layers.Input(shape=(NR_PRODUCTS, HISTORY_DIM))
@@ -63,6 +64,7 @@ def train_model(
         epochs: int = 10,
         ) -> Model:
     """
+    Train the previously built model as described in the paper.
     """
     loss_per_epoch_train = []
     loss_per_epoch_test = []

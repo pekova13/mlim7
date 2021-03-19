@@ -24,6 +24,7 @@ TRAIN_LAST_WEEK = 79
 LIMIT_SHOPPERS_COUPONS = 2000
 NR_COUPONS = 5
 DISCOUNTS = (0.3, 0.25, 0.2, 0.15)
+COUPONS_EARLY_STOP = True
 
 
 # parms dicts
@@ -48,6 +49,8 @@ model_parms = {
 coupon_parms = {
     'nr_coupons': NR_COUPONS,
     'discounts': DISCOUNTS,
+    'early_stop': COUPONS_EARLY_STOP,
+    'week': 90
 }
 
 

@@ -1,7 +1,13 @@
 """
-Step 3
+Step 3: optimize coupons
 
+config:
+- LIMIT_SHOPPERS_COUPONS: for how many shoppers to optimize coupons
+- NR_COUPONS:             how many coupons to select for each shopper
+- DISCOUNTS:              possible discount values to select from (order matters if early stopping)
+- COUPONS_EARLY_STOP:     if True, the first best discount value is selected for each shopper
 """
+
 import sys
 sys.path.append('.')
 
@@ -45,9 +51,9 @@ if __name__ == '__main__':
         coupon_optimizer.optimize(H, F, C, shopper=batch_streamer_90.current_shopper)
         coupon_randomizer.optimize(H, F, C, shopper=batch_streamer_90.current_shopper)
 
-        if batch_streamer_90.current_shopper % 20 == 0:
-            coupon_optimizer.write_stats(config.COUPONS_PRED_STATS_OPTIMAL_PATH)
-            coupon_randomizer.write_stats(config.COUPONS_PRED_STATS_RANDOM_PATH)
+        #if batch_streamer_90.current_shopper % 50 == 0:
+        #    coupon_optimizer.write_stats(config.COUPONS_PRED_STATS_OPTIMAL_PATH)
+        #    coupon_randomizer.write_stats(config.COUPONS_PRED_STATS_RANDOM_PATH)
 
 
     coupon_optimizer.write_coupons(config.COUPONS_PRED_OPTIMAL_PATH)

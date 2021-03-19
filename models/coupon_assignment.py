@@ -22,9 +22,35 @@ class Coupon:
 
 class CouponOptimizer:
     """
-    # TODO write doc
+    A routine to optimize selection of shopper coupons.
+
+    Coupons are selected iteratively, such that
+
+    - coupons assigned earlier are likely to have a higher revenue uplift (by definition)
+    - consequent coupons are assigned s.t. previous coupons are held constant
+    - if the next possible discount value does not lead to a revenue uplift, the previous is taken (early stopping)
+    - if no coupon leads to a revenue uplift, a random coupon is assigned
+    
+    Args:
+        model:              a trained tf.keras.Model
+        prices:             the price array
+        discounts:          sequence of possible discount values (e.g., [0.5, 0.1]), tested in the same order
+        nr_coupons:         nr of coupons to assign to a shopper
+        generate_random:    True to generate random coupons instead of optimal coupons
+        early_stop:         True to stop early if the next discount value does not give a revenue uplift
+        week:               number of the week (used only for the CSV output)
+    
+    Usage:
+    >>> coupon_optimizer = CouponOptimizer()
+    >>> for H, F, C, _ in batch_streamer:
+    >>>     coupon_optimizer.optimize(H, F, C, shopper=batch_streamer.current_shopper)
+
+    >>> coupon_optimizer.write_coupons(path)
+    >>> coupon_optimizer.write_stats(path)
+
+    IMPORTANT: the batch streamer should be configured such that it returns a mini-batch with
+               a single shopper only, for one week only
     """
-    WEEK: int = 90
     
     def __init__(self, 
             model: Model, 
@@ -32,13 +58,15 @@ class CouponOptimizer:
             discounts: Sequence[float], 
             nr_coupons: int,
             generate_random: bool = False,
-            early_stop: bool = True
+            early_stop: bool = True,
+            week: int = 90,
             ) -> None:
 
         self.model = model
         self.prices = prices
         self.discounts = discounts # order matters for early stopping!
 
+        self.WEEK = week
         self.nr_products = self.prices.shape[0]
         self.nr_coupons = nr_coupons
         self.generate_random = generate_random
@@ -56,7 +84,6 @@ class CouponOptimizer:
     def optimize(self, 
             H: np.ndarray, F: np.ndarray, C: np.ndarray,
             shopper: int,
-            #P: Optional[np.ndarray] = None
             ) -> None:
         """
         Find shopper coupons that optimally improve the expected revenue and store them in-memory.
@@ -79,15 +106,15 @@ class CouponOptimizer:
             ) -> np.ndarray:
         """
         Find one coupon which optimally improves the expected revenue 
-        and return the updated coupon matrix.
+        and return the updated coupon matrix containing this coupon.
         """
         # create default random coupon
         coupon = self._generate_random_coupon(shopper=shopper, i=i)
 
-        # find optimal coupon
+        # find the optimal coupon
         if not self.generate_random:
 
-            # create mini-batches to speed up process
+            # create mini-batches to significantly speed up the process
             tile_dims = (self.nr_products, 1, 1)
             H_repeated = np.tile(H, tile_dims)
             F_repeated = np.tile(F, tile_dims)

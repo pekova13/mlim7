@@ -132,9 +132,6 @@ class DataStreamer:
         - extended purchase history in weeks `60-64, 65-69, 70-74, 75-79, 80-84` (avg frequencies)
         - recent coupon history in weeks `85, 86, 87, 88, 89, 90`
         - purchases in week `90`
-
-        # TODO improve this text
-
         """
         #print(self) # uncode for debugging
 
