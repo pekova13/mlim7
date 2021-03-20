@@ -33,6 +33,7 @@ def assert_df_columns(df: pd.DataFrame, columns: Sequence[str]):
 
 if __name__ == '__main__':
 
+    print('Collecting data...')
     baskets_df = pd.read_parquet(config.BASKETS_PARQUET_PATH)
     coupons_df = pd.read_parquet(config.COUPONS_PARQUET_PATH)
 
@@ -41,13 +42,14 @@ if __name__ == '__main__':
 
     if config.LIMIT_SHOPPERS_DATA_PREP > 0:
 
-        print(f'sample limited to {config.LIMIT_SHOPPERS_DATA_PREP} shoppers')
+        print(f'Sample limited to {config.LIMIT_SHOPPERS_DATA_PREP} shoppers.')
         baskets_df = baskets_df[baskets_df['shopper'] <= config.LIMIT_SHOPPERS_DATA_PREP]
         coupons_df = coupons_df[coupons_df['shopper'] <= config.LIMIT_SHOPPERS_DATA_PREP]
 
         assert isinstance(baskets_df, pd.DataFrame) # for pylance
         assert isinstance(coupons_df, pd.DataFrame)
 
+    print('Transforming data...')
     ShopperDataWriter().fit(df=baskets_df, target='product').write(config.BASKETS_PATH)
     ShopperDataWriter().fit(df=coupons_df, target='product').write(config.COUPON_PRODUCTS_PATH)
     ShopperDataWriter().fit(df=coupons_df, target='discount').write(config.COUPON_VALUES_PATH)
