@@ -65,10 +65,11 @@ import os
 _DATA_FOLDER = 'data'
 _OUT_FOLDER = 'coupons'
 
-if not os.path.exists(_DATA_FOLDER):
-    os.mkdir(_DATA_FOLDER)
 if not os.path.exists(_OUT_FOLDER):
     os.mkdir(_OUT_FOLDER)
+if not os.path.exists(_DATA_FOLDER):
+    os.mkdir(_DATA_FOLDER)
+    raise ValueError('Data folder has been created. Please add source files.')
 
 def data_path(path: str) -> str:
     return os.path.join(_DATA_FOLDER, path)
