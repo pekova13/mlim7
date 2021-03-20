@@ -20,6 +20,8 @@ LEARNING_RATE = 1e3
 BATCH_SIZE = 10
 NR_EPOCHS = 10
 TRAIN_LAST_WEEK = 79
+DENSE_LAYER = 250
+ACTIVATION = 'sigmoid'
 
 # Step 3: Assign coupons
 LIMIT_SHOPPERS_COUPONS = 2000
@@ -46,6 +48,8 @@ model_parms = {
     'FREQUENCY_DIM': DIMENSION_EXTENDED_HISTORY,
     'kernel_size': KERNEL_SIZE,
     'nr_filters': NR_FILTERS,
+    'dense_layer': DENSE_LAYER,
+    'activation': ACTIVATION
 }
 coupon_parms = {
     'nr_coupons': NR_COUPONS,

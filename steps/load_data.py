@@ -5,7 +5,7 @@ This module is used to initiate data/batch streamers to reduce code clutter in o
 from models.data_streamer import BatchStreamer, DataStreamer
 from models.shopper_data import ShopperDataStreamer
 
-from steps import config
+import config
 
 baskets_streamer = ShopperDataStreamer(config.BASKETS_PATH)
 coupon_products_streamer = ShopperDataStreamer(config.COUPON_PRODUCTS_PATH)

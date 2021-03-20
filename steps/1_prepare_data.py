@@ -24,7 +24,7 @@ sys.path.append('.')
 import pandas as pd
 
 from models.shopper_data import ShopperDataWriter
-from steps import config
+import config
 
 
 def assert_df_columns(df: pd.DataFrame, columns: Sequence[str]):

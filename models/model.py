@@ -20,6 +20,8 @@ def build_model(
         FREQUENCY_DIM: int = 5,
         kernel_size: int = 3,
         nr_filters: int = 18,
+        dense_layer: int = 250,
+        activation: str = 'sigmoid'
         ) -> Model:
     """
     Build a CNN model as described in the paper.
@@ -51,7 +53,7 @@ def build_model(
 
     merged = layers.concatenate([head_H.output, head_F.output, head_C.output])
 
-    final_layer = layers.Dense(250, activation='sigmoid')(merged)
+    final_layer = layers.Dense(dense_layer, activation=activation)(merged)
 
     model = Model(
         inputs=[head_H.input, head_F.input, head_C.input], 

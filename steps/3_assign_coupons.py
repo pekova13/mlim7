@@ -18,7 +18,7 @@ from tqdm import tqdm
 from models.coupon_assignment import CouponOptimizer
 from models.model import build_model
 from steps.load_data import batch_streamer_90
-from steps import config
+import config
 
 
 if __name__ == '__main__':

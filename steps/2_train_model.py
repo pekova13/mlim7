@@ -14,7 +14,7 @@ Train: predicting weeks until TRAIN_LAST_WEEK                               (30-
 Test:  predicting weeks from TRAIN_LAST_WEEK+1                              (80-89)
 
 Hyperparameters:
-NR_EPOCHS, LEARNING_RATE, KERNEL_SIZE, NR_FILTERS, BATCH_SIZE
+NR_EPOCHS, LEARNING_RATE, KERNEL_SIZE, NR_FILTERS, BATCH_SIZE, ACTIVATION, DENSE_LAYER
 LIMIT_SHOPPERS_TRAINING: consider only first N shoppers to speed up training
 """
 
@@ -26,7 +26,7 @@ from tensorflow.keras.optimizers import Adam
 
 from models.model import build_naive_model, build_model, train_model
 from steps.load_data import batch_streamer_train, batch_streamer_test, NR_PRODUCTS
-from steps import config
+import config
 
 
 if __name__ == '__main__':
