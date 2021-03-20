@@ -42,8 +42,8 @@ if __name__ == '__main__':
     if config.LIMIT_SHOPPERS_DATA_PREP > 0:
 
         print(f'sample limited to {config.LIMIT_SHOPPERS_DATA_PREP} shoppers')
-        baskets_df = baskets_df[baskets_df['shopper'] < config.LIMIT_SHOPPERS_DATA_PREP]
-        coupons_df = coupons_df[coupons_df['shopper'] < config.LIMIT_SHOPPERS_DATA_PREP]
+        baskets_df = baskets_df[baskets_df['shopper'] <= config.LIMIT_SHOPPERS_DATA_PREP]
+        coupons_df = coupons_df[coupons_df['shopper'] <= config.LIMIT_SHOPPERS_DATA_PREP]
 
         assert isinstance(baskets_df, pd.DataFrame) # for pylance
         assert isinstance(coupons_df, pd.DataFrame)
