@@ -79,7 +79,7 @@ class DataStreamer:
 
         if last_shopper:
             assert last_shopper > 0
-            assert last_shopper < self.last_shopper
+            assert last_shopper <= self.last_shopper
             self.last_shopper = last_shopper
 
         # for final predictions
