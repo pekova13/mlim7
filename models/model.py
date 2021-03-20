@@ -115,19 +115,18 @@ def train_model(
         batch_streamer_train.reset() # ensure that all iterators are reset
         for H, F, C, P in tqdm(batch_streamer_train):
 
-            # generate and evaluate predictions
-            sigmoid_proba = model([H, F, C], training=True)
-            loss_value = loss_fn(P, sigmoid_proba)
-            loss_array_train.append(loss_value)
+            with GradientTape() as tape:
+                # generate and evaluate predictions
+                sigmoid_proba = model([H, F, C], training=True)
+                loss_value = loss_fn(P, sigmoid_proba)
+                loss_array_train.append(loss_value)
 
             if isinstance(model, NaiveModel):
                 pass
             else:
                 # update weights with computed gradients
-                with GradientTape() as tape:
-
-                    grads = tape.gradient(loss_value, model.trainable_weights)
-                    optimizer.apply_gradients(zip(grads, model.trainable_weights))
+                grads = tape.gradient(loss_value, model.trainable_weights)
+                optimizer.apply_gradients(zip(grads, model.trainable_weights))
 
         mean_loss_current_epoch_train = np.array(loss_array_train).mean()
         loss_per_epoch_train.append(mean_loss_current_epoch_train)
@@ -135,7 +134,7 @@ def train_model(
 
         # TEST
         batch_streamer_test.reset()
-        for H, F, C, P in batch_streamer_test:
+        for H, F, C, P in tqdm(batch_streamer_test):
 
             # generate and evaluate predictions
             sigmoid_proba=model([H, F, C], training=False)
