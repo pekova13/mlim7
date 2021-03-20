@@ -17,7 +17,7 @@ Activate the virtual environment:
 ````
 source venv/bin/activate
 ````
-Specify model parameters as desired in `steps/config.py`
+Specify model parameters as desired in `config.py`
 
 ## Step 1. Prepare data
 ````
@@ -45,9 +45,13 @@ __Inputs__:
 __Target__:
 * `P` = actual purchases in the prediction week
 
-### Naive benchmark (random predictions):
+### Naive benchmark 1 (random predictions):
 ````
 python steps/2_train_model.py --naive
+````
+### Naive benchmark 2 (fixed value predictions):
+````
+python steps/2_train_model.py --naive 0.04
 ````
 
 ## Step 3. Assign coupons
