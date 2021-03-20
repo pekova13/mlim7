@@ -2,7 +2,7 @@
 import sys
 sys.path.append('.')
 
-from typing import Sequence, Union
+from typing import Optional, Sequence, Union
 
 import numpy as np
 from tqdm import tqdm
@@ -63,17 +63,21 @@ def build_model(
 
 class NaiveModel:
     """
-    A very naive model that returns random predictions
+    A very naive model that returns random or fixed predictions
     """
+    def __init__(self, fix_value: Optional[float] = None) -> None:
+        self.fix_value = fix_value
+
     def __call__(self, input: Sequence[np.ndarray], *args, **kwargs) -> np.ndarray:
         batch_size = input[0].shape[0]
         nr_products = input[0].shape[1]
+        
+        if self.fix_value:
+            pred = [self.fix_value for _ in range(batch_size*nr_products)]
+        else:
+            pred = [np.random.rand() for _ in range(batch_size*nr_products)]
 
-        random_pred = np.array(
-            [np.random.rand() for i in range(batch_size * nr_products)]
-            ).reshape((batch_size, nr_products))
-
-        return random_pred
+        return np.array(pred).reshape((batch_size, nr_products))
 
     def save_weights(self, *args, **kwargs) -> None:
         pass
@@ -82,12 +86,12 @@ class NaiveModel:
         return 'This is a naive model'
 
 
-def build_naive_model(seed = 0, **kwargs):
+def build_naive_model(seed = 0, fix_value: Optional[float] = None, **kwargs):
     """
     Build a naive model to do a naive benchmark.
     """
     np.random.seed(seed)
-    return NaiveModel()
+    return NaiveModel(fix_value=fix_value)
 
 
 def train_model(

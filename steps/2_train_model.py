@@ -34,10 +34,11 @@ if __name__ == '__main__':
     from argparse import ArgumentParser
     parser = ArgumentParser()
     parser.add_argument('-n', '--naive', dest='naive', action='store_true')
+    parser.add_argument('fix_value', nargs='?', const=None, type=float)
     kwargs = parser.parse_args()
 
     if kwargs.naive:
-        model = build_naive_model()
+        model = build_naive_model(fix_value=kwargs.fix_value)
     else:
         model = build_model(**config.model_parms, NR_PRODUCTS=NR_PRODUCTS)
     
@@ -55,6 +56,7 @@ if __name__ == '__main__':
         epochs=1 if kwargs.naive else config.NR_EPOCHS
     )
 
-    model.save_weights(config.MODEL_WEIGHTS_PATH)
+    if not kwargs.naive:
+        model.save_weights(config.MODEL_WEIGHTS_PATH)
 
     batch_streamer_train.close() # will close all file connections
