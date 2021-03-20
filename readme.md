@@ -11,9 +11,10 @@ Detailed documentation for these parameters can be found in docstring at the top
 Create a virtual environment and install required packages:
 ````
 python3 -m venv venv
-pip -r requirements.txt
+source venv/bin/activate
+pip install -r requirements.txt
 ````
-Activate the virtual environment:
+Activate the virtual environment before doing any of the consequent steps:
 ````
 source venv/bin/activate
 ````
