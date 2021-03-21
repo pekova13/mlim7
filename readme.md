@@ -28,11 +28,13 @@ In this step, source data is transformed from the source parquet files into a cu
 
 Please note that preparing data can take a very long time due to the size of the data. It is therefore suggested to set `LIMIT_SHOPPERS_DATA_PREP` and `LIMIT_SHOPPERS_TRAINING` to the same value.
 
+Default paths for source files are `data/baskets.parquet` and `data/coupons.parquet`, they can be changed in the `config.py` if needed.
+
 ## Step 2. Train the CNN model
 ````
 python steps/2_train_model.py
 ````
-In this step, the CNN model is built and trained as presented in the paper. 
+In this step, the CNN model is built and trained as discussed in the paper. 
 
 ### Model architecture:
 
